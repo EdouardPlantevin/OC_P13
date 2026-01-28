@@ -13,7 +13,7 @@ import {RouterLink} from '@angular/router';
 
     <div class="container my-5">
 
-      <h1 class="my-5">Choisir un utilisateur, le 4 étant le Support</h1>
+      <h1 class="my-5">Qui êtes vous ?</h1>
 
       <div class="row g-4">
         @for (user of mockUsers; track user.id) {
@@ -31,9 +31,7 @@ export class HomeComponent {
 
   mockUsers: UserInterface[] = [
     { id: '1', name: 'Customer Edouard' },
-    { id: '2', name: 'Customer Bob' },
-    { id: '3', name: 'Customer Charlie' },
-    { id: '4', name: 'Support' },
+    { id: '2', name: 'Support' },
   ];
 
 }
