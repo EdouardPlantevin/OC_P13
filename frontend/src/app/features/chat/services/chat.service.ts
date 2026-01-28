@@ -2,7 +2,7 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject} from 'rxjs';
 import { RxStomp } from '@stomp/rx-stomp';
-import {MessageInterface} from '../interfaces/message.interface';
+import {BackendMessage, MessageInterface} from '../interfaces/message.interface';
 
 
 
@@ -13,7 +13,7 @@ export class ChatService {
   private http=  inject(HttpClient);
   private rxStomp = new RxStomp();
 
-  private messagesSubject = new BehaviorSubject<MessageInterface[]>([])
+  private messagesSubject = new BehaviorSubject<BackendMessage[]>([])
   public messages$ = this.messagesSubject.asObservable();
 
   constructor() {
@@ -25,38 +25,24 @@ export class ChatService {
     this.rxStomp.activate();
 
     this.rxStomp.watch('/topic/public').subscribe((message) => {
-      const data = JSON.parse(message.body);
-      const newMessage: MessageInterface = this.mapToMessageInterface(data);
-
-      const currentMessages = this.messagesSubject.value;
-      this.messagesSubject.next([...currentMessages, newMessage]);
+      const data = JSON.parse(message.body) as BackendMessage;
+      const current = this.messagesSubject.value;
+      this.messagesSubject.next([...current, data]);
     });
   }
 
   loadHistory() {
-    this.http.get<any[]>('http://localhost:8080/messages').subscribe({
-      next: (history) => {
-        const mappedHistory = history.map(msg => this.mapToMessageInterface(msg));
-        this.messagesSubject.next(mappedHistory);
-      },
-      error: (err) => console.error('Impossible de charger l\'historique', err)
+    this.http.get<BackendMessage[]>('http://localhost:8080/messages').subscribe({
+      next: (history) => this.messagesSubject.next(history),
+      error: (err) => console.error('Erreur chargement historique', err)
     });
   }
 
-  sendMessage(content: string) {
-    const payload = { content, sender: 'USER' };
+  sendMessage(content: string, sender: 'USER' | 'SUPPORT') {
+    const payload = { content, sender };
     this.rxStomp.publish({
       destination: '/app/chat.sendMessage',
       body: JSON.stringify(payload),
     });
-  }
-
-
-  private mapToMessageInterface(data: any): MessageInterface {
-    return {
-      content: data.content,
-      times: data.times,
-      owner: data.sender === 'USER'
-    };
   }
 }

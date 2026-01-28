@@ -1,32 +1,39 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, ElementRef, inject, OnInit, ViewChild, AfterViewChecked } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { AsyncPipe } from '@angular/common'; // <--- Ne pas oublier
+import { AsyncPipe } from '@angular/common';
+import { map, Observable, tap } from 'rxjs'; // Import de 'tap'
+
 import { MessageComponent } from './message.component';
+import { MessageInterface } from '../interfaces/message.interface';
 import { ChatService } from '../services/chat.service';
 
 @Component({
   selector: 'app-chat',
-  standalone: true, // Assurez-vous d'être en standalone
+  standalone: true,
   imports: [
     ReactiveFormsModule,
     MessageComponent,
-    AsyncPipe // <--- Indispensable pour lire messages$
+    AsyncPipe
   ],
   template: `
     <div class="container py-5">
       <div class="card mx-auto" style="max-width: 600px; height: 80vh;">
 
         <div class="card-header bg-white py-3">
-          <h5 class="mb-0">Discussion avec le support</h5>
+          <h5 class="mb-0">
+            @if (myRole === 'SUPPORT') {
+              Espace Support (Client: Edouard)
+            } @else {
+              Discussion avec le Support
+            }
+          </h5>
         </div>
 
-        <div class="card-body overflow-auto bg-light" style="flex-grow: 1; display: flex; flex-direction: column;">
-
+        <div #scrollContainer class="card-body overflow-auto bg-light" style="flex-grow: 1; display: flex; flex-direction: column;">
           @for (message of messages$ | async; track $index) {
             <app-message [message]="message" />
           }
-
         </div>
 
         <div class="card-footer bg-white border-top-0 p-3">
@@ -43,37 +50,58 @@ import { ChatService } from '../services/chat.service';
       </div>
     </div>
   `,
-  styles: ``,
 })
 export class ChatComponent implements OnInit {
 
   private readonly route = inject(ActivatedRoute);
-  private readonly formBuilder = inject(FormBuilder);
-  private readonly chatService = inject(ChatService); // Injection du service
-
-  // Observable lié directement au template
-  messages$ = this.chatService.messages$;
+  private readonly fb = inject(FormBuilder);
+  private readonly chatService = inject(ChatService);
 
   readonly userId: string;
+  myRole: 'USER' | 'SUPPORT';
+
+  messages$: Observable<MessageInterface[]>;
+
+  // Récupération de l'élément HTML du container
+  @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
   constructor() {
     this.userId = this.route.snapshot.paramMap.get('userId') as string;
+    this.myRole = (this.userId === '2') ? 'SUPPORT' : 'USER';
+
+    this.messages$ = this.chatService.messages$.pipe(
+      map(backendMessages => backendMessages.map(msg => ({
+        content: msg.content,
+        times: msg.times,
+        owner: msg.sender === this.myRole
+      }))),
+      tap(() => this.scrollToBottom())
+    );
   }
 
   ngOnInit() {
-    // Charge l'historique quand on arrive sur la page
     this.chatService.loadHistory();
+    this.scrollToBottom();
   }
 
-  chatForm = this.formBuilder.nonNullable.group({
+  chatForm = this.fb.nonNullable.group({
     message: ['', [Validators.required, Validators.maxLength(255)]],
   });
 
   onSubmit() {
     const msg = this.chatForm.getRawValue().message;
     if (msg.trim()) {
-      this.chatService.sendMessage(msg); // Envoi au backend
-      this.chatForm.reset(); // Vide le champ
+      this.chatService.sendMessage(msg, this.myRole);
+      this.chatForm.reset();
+      this.scrollToBottom();
     }
+  }
+
+  private scrollToBottom(): void {
+    setTimeout(() => {
+      if (this.scrollContainer) {
+        this.scrollContainer.nativeElement.scrollTop = this.scrollContainer.nativeElement.scrollHeight;
+      }
+    }, 50);
   }
 }
