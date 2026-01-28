@@ -7,7 +7,7 @@ export const routes: Routes = [
     loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent),
   },
   {
-    path: 'chat/:userId',
+    path: 'chat/:userId/:roomId',
     loadComponent: () => import('./features/chat/components/chat.component').then(m => m.ChatComponent),
   }
 ];

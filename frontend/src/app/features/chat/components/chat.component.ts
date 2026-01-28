@@ -57,23 +57,29 @@ export class ChatComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly chatService = inject(ChatService);
 
+  // URL paramètres
   readonly userId: string;
+  readonly roomId: string;
+
+
   myRole: 'USER' | 'SUPPORT';
 
   messages$: Observable<MessageInterface[]>;
 
-  // Récupération de l'élément HTML du container
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
   constructor() {
     this.userId = this.route.snapshot.paramMap.get('userId') as string;
-    this.myRole = (this.userId === '2') ? 'SUPPORT' : 'USER';
+    this.roomId = this.route.snapshot.paramMap.get('roomId') as string;
+
+    // ATTENTION SUPPORT doit avec l'id 4
+    this.myRole = (this.userId === '4') ? 'SUPPORT' : 'USER';
 
     this.messages$ = this.chatService.messages$.pipe(tap(() => this.scrollToBottom()));
   }
 
   ngOnInit() {
-    this.chatService.loadHistory();
+    this.chatService.joinRoom(this.roomId);
     this.scrollToBottom();
   }
 
@@ -84,7 +90,7 @@ export class ChatComponent implements OnInit {
   onSubmit() {
     const msg = this.chatForm.getRawValue().message;
     if (msg.trim()) {
-      this.chatService.sendMessage(msg, this.myRole);
+      this.chatService.sendMessage(this.roomId, msg, this.myRole);
       this.chatForm.reset();
       this.scrollToBottom();
     }
