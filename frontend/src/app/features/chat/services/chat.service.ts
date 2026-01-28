@@ -2,7 +2,7 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {BehaviorSubject} from 'rxjs';
 import { RxStomp } from '@stomp/rx-stomp';
-import {BackendMessage, MessageInterface} from '../interfaces/message.interface';
+import {MessageInterface} from '../interfaces/message.interface';
 
 
 
@@ -13,7 +13,7 @@ export class ChatService {
   private http=  inject(HttpClient);
   private rxStomp = new RxStomp();
 
-  private messagesSubject = new BehaviorSubject<BackendMessage[]>([])
+  private messagesSubject = new BehaviorSubject<MessageInterface[]>([])
   public messages$ = this.messagesSubject.asObservable();
 
   constructor() {
@@ -25,14 +25,14 @@ export class ChatService {
     this.rxStomp.activate();
 
     this.rxStomp.watch('/topic/public').subscribe((message) => {
-      const data = JSON.parse(message.body) as BackendMessage;
+      const data = JSON.parse(message.body) as MessageInterface;
       const current = this.messagesSubject.value;
       this.messagesSubject.next([...current, data]);
     });
   }
 
   loadHistory() {
-    this.http.get<BackendMessage[]>('http://localhost:8080/messages').subscribe({
+    this.http.get<MessageInterface[]>('http://localhost:8080/messages').subscribe({
       next: (history) => this.messagesSubject.next(history),
       error: (err) => console.error('Erreur chargement historique', err)
     });

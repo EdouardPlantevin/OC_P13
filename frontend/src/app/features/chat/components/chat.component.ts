@@ -32,7 +32,7 @@ import { ChatService } from '../services/chat.service';
 
         <div #scrollContainer class="card-body overflow-auto bg-light" style="flex-grow: 1; display: flex; flex-direction: column;">
           @for (message of messages$ | async; track $index) {
-            <app-message [message]="message" />
+            <app-message [message]="message" [isMine]="message.sender === myRole" />
           }
         </div>
 
@@ -69,14 +69,7 @@ export class ChatComponent implements OnInit {
     this.userId = this.route.snapshot.paramMap.get('userId') as string;
     this.myRole = (this.userId === '2') ? 'SUPPORT' : 'USER';
 
-    this.messages$ = this.chatService.messages$.pipe(
-      map(backendMessages => backendMessages.map(msg => ({
-        content: msg.content,
-        times: msg.times,
-        owner: msg.sender === this.myRole
-      }))),
-      tap(() => this.scrollToBottom())
-    );
+    this.messages$ = this.chatService.messages$.pipe(tap(() => this.scrollToBottom()));
   }
 
   ngOnInit() {
