@@ -1,1 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.animation-elevation {
+  transition: box-shadow 0.3s ease;
+}
+
+.animation-elevation:hover {
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+}
