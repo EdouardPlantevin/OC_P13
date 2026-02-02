@@ -1,35 +1,32 @@
 package com.ycyw_poc.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+@Entity
+@Table(name = "chat_messages")
+@Data
 public class ChatMessage {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String content;
     private String sender;
-    private String times;
 
+    private LocalDateTime timestamp;
 
-    public ChatMessage(String content, String sender, String times) {
-        this.content = content;
-        this.sender = sender;
-        this.times = times;
-    }
+    @ManyToOne
+    @JoinColumn(name = "session_id")
+    @JsonIgnore
+    private ChatSession session;
 
-    public String getContent() {
-        return content;
-    }
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getSender() {
-        return sender;
-    }
-    public void setSender(String sender) {
-        this.sender = sender;
-    }
-
+    /** Format HH:mm pour le frontend (propriété "times"). */
     public String getTimes() {
-        return times;
-    }
-    public void setTimes(String times) {
-        this.times = times;
+        return timestamp == null ? "" : timestamp.format(DateTimeFormatter.ofPattern("HH:mm"));
     }
 }
