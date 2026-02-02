@@ -27,6 +27,18 @@ docker-compose up --build
 
 *Note : L'option `--build` assure que le code Java est bien recompile à chaque lancement.*
 
+## 📋 Données de test
+
+Les données de test (utilisateurs Edouard et Adèle, tables `users` et `customer_profiles`) sont chargées automatiquement au **premier démarrage** via le script `db/init.sql`.
+
+Pour **réinitialiser** la base et recharger les données de test, exécuter :
+
+```bash
+docker-compose down -v
+docker-compose up --build
+```
+
+L’option `-v` supprime les volumes (dont la base MySQL), ce qui force la réexécution du script d’initialisation au prochain démarrage.
 
 ## 🏗️ Architecture Technique
 

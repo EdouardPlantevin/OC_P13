@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   backend:
     build: ./backend
@@ -5,6 +7,11 @@ services:
       - "8080:8080"
     networks:
       - ycyw-net
+    depends_on:
+      db:
+        condition: service_healthy # <--- C'EST LA CLÉ : On attend que le Healthcheck soit vert
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/ycyw_db?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
 
   frontend:
     build: ./frontend
@@ -14,6 +21,31 @@ services:
       - backend
     networks:
       - ycyw-net
+
+  db:
+    image: mysql:8.0
+    container_name: ycyw-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: ycyw_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ycyw-net
+
+volumes:
+ db_data:
 
 networks:
   ycyw-net:
