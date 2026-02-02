@@ -1,5 +1,8 @@
+-- Encodage UTF-8 pour les caractères accentués
+SET NAMES 'utf8mb4';
+
 -- Création de la base
-CREATE DATABASE IF NOT EXISTS ycyw_db;
+CREATE DATABASE IF NOT EXISTS ycyw_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE ycyw_db;
 
 CREATE TABLE IF NOT EXISTS users (
@@ -40,3 +43,18 @@ INSERT INTO users (id, email, password_hash) VALUES
 INSERT INTO customer_profiles (first_name, last_name, license_number, user_id) VALUES
 ('Edouard', 'Dupont', NULL, 1),
 ('Adele', 'Martin', NULL, 3);
+
+-- Session de chat pour Edouard (room 1)
+INSERT INTO chat_sessions (id, start_time, end_time, status) VALUES
+('1', '2026-02-02 09:00:00', NULL, 'OPEN');
+
+-- Conversation d'exemple : Edouard et le support
+INSERT INTO chat_messages (sender, content, timestamp, session_id) VALUES
+('SUPPORT', 'Bonjour Edouard, comment puis-je vous aider aujourd''hui ?', '2026-02-02 09:00:00', '1'),
+('USER', 'Bonjour, j''ai une question sur ma réservation.', '2026-02-02 09:01:15', '1'),
+('SUPPORT', 'Bien sûr, de quelle réservation s''agit-il ?', '2026-02-02 09:01:45', '1'),
+('USER', 'La réservation du 15 mars pour une Clio.', '2026-02-02 09:02:30', '1'),
+('SUPPORT', 'Je consulte votre dossier. Un instant...', '2026-02-02 09:03:00', '1'),
+('SUPPORT', 'Votre réservation est bien confirmée pour le 15 mars. Souhaitez-vous modifier quelque chose ?', '2026-02-02 09:04:20', '1'),
+('USER', 'Non, c''était juste pour confirmer. Merci !', '2026-02-02 09:05:00', '1'),
+('SUPPORT', 'Avec plaisir. N''hésitez pas si vous avez d''autres questions.', '2026-02-02 09:05:30', '1');
